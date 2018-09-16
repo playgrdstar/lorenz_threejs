@@ -1,3 +1,3 @@
-# Primer on three.js 
+# Primer on vertices in three.js 
 
-A simple primer on three.js
+A simple primer on manipulating vertices in three.js

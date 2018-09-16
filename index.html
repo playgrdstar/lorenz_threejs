@@ -7,8 +7,11 @@
         </style>
     </head>
     <body>
-        <script type="text/javascript" src="./three.js"></script>
-        <script type="text/javascript" src="./OrbitControls.js"></script>
+        <script type="text/javascript" src="./libs/three.js"></script>
+        <script type="text/javascript" src="./libs/TrackballControls.js"></script>
+        <script type="text/javascript" src="./libs/OrbitControls.js"></script>
+        <script type="text/javascript" src="https://cdn.rawgit.com/josephg/noisejs/master/perlin.js"></script>
+        
 
         <script>
 
@@ -19,7 +22,7 @@
             var renderer = new THREE.WebGLRenderer( { antialias: true } );
             renderer.setPixelRatio( window.devicePixelRatio );
             renderer.setSize( window.innerWidth, window.innerHeight );
-            renderer.setClearColor( 0xCC7FE0, 1 );
+            renderer.setClearColor( 0x2B3A42, 1 );
 
             document.body.appendChild( renderer.domElement );
 
@@ -31,70 +34,97 @@
                 hemiLight     = new THREE.HemisphereLight('#FFE7FF', '#FFE7FF', 0.5 ),
                 light         = new THREE.PointLight( '#FFE7FF', 1, 100 );
 
-            hemiLight.position.set( 0, 0, 10 );
-            light.position.set( 0, 0, 0 );
+            hemiLight.position.set( 0, 0, 2 );
+            light.position.set( 0, 0, 20 );
 
             scene.add( hemiLight );
             scene.add( light );
 
             var group = new THREE.Group();
 
-            var geometry = new THREE.SphereGeometry( 3, 32, 32 );
-            var material = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity:0.7, transparent:true } );
+            var geometry = new THREE.SphereGeometry( 15, 200, 50 );
+            var material = new THREE.MeshLambertMaterial( { color: 0xCCB4E0, opacity:0.5, transparent:true, wireframe:true, emissive: 0xFFB4E0,emissiveIntensity:0.1} );
+
             var sphere_one = new THREE.Mesh( geometry, material );
             sphere_one.position.x = 0;
             sphere_one.position.y = 0;
             sphere_one.position.z = 0;
             group.add( sphere_one );
 
-
-            var geometry = new THREE.SphereGeometry( 2, 32, 32 );
-            var material = new THREE.MeshPhongMaterial( { color: 0xE74C3C } );
+            var geometry = new THREE.SphereGeometry( 12, 150, 40 );
+            var material = new THREE.MeshLambertMaterial( { color: 0xFFB4E0, opacity:0.6, transparent:false, wireframe:true,  } );
             var sphere_two = new THREE.Mesh( geometry, material );
-            sphere_two.position.x = 7*Math.cos(30);
-            sphere_two.position.y = 7*Math.sin(30);
+            sphere_two.position.x = 0;
+            sphere_two.position.y = 0;
             sphere_two.position.z = 0;
             group.add( sphere_two );
 
-
-            var geometry = new THREE.SphereGeometry( 2, 32, 32 );
-            var material = new THREE.MeshLambertMaterial( { color: 0xFFE7FF } );
+            var geometry = new THREE.SphereGeometry( 40, 100, 100 );
+            var material = new THREE.MeshLambertMaterial( {  color: 0xEB6896, opacity:0.2, transparent:true, wireframe:true, emissive: 0xEB6896,emissiveIntensity:0.8 } );
             var sphere_three = new THREE.Mesh( geometry, material );
-            sphere_three.position.x = 9*Math.cos(45);
-            sphere_three.position.y = 9*Math.sin(45);
+            sphere_three.position.x = 0;
+            sphere_three.position.y = 0;
             sphere_three.position.z = 0;
             group.add( sphere_three );
 
-            var geometry = new THREE.SphereGeometry( 2, 32, 32 );
-            var material = new THREE.MeshToonMaterial( { color: 0x3D98DB, opacity:0.8, transparent:true } );
-            var sphere_four = new THREE.Mesh( geometry, material );
-            sphere_four.position.x = 11*Math.cos(60);
-            sphere_four.position.y = 11*Math.sin(60);
-            sphere_four.position.z = 0;
-            group.add( sphere_four );
 
-            var geometry = new THREE.SphereGeometry( 2, 32, 32 );
-            var material = new THREE.MeshToonMaterial( { color: 0x2980B9, opacity:0.1, transparent:true, wireframe:true } );
-            var sphere_five = new THREE.Mesh( geometry, material );
-            sphere_five.position.x = 13*Math.cos(75);
-            sphere_five.position.y = 13*Math.sin(75);
-            sphere_five.position.z = 0;
-            group.add( sphere_five );
 
             scene.add( group );
 
+            var clock = new THREE.Clock();
+            var direction = 1;
+            
 
-            var prevFog = true;
+            var prevFog = false;
 
             var render = function () {
-
+                noise.seed(Math.random());
                 requestAnimationFrame( render );
-                orbit.update();
-                group.rotation.x += 0.03;
-                group.rotation.y += 0.02;
-                group.rotation.z += 0.01;
-               
 
+                sphere_one.geometry.vertices.forEach(function(i){
+                    var noisy = noise.simplex3(i.x,i.y,i.z)*0.05;
+                    i.x+=noisy*direction;
+                    i.y+=noisy*direction;
+                    i.z+=noisy*direction;
+                });
+
+                sphere_two.geometry.vertices.forEach(function(i){
+                    var noisy = noise.simplex3(i.x,i.y,i.z)*0.05;
+                    i.x+=noisy*direction;
+                    i.y+=noisy*direction;
+                    i.z+=noisy*direction;
+                });
+
+                sphere_three.geometry.vertices.forEach(function(i){
+                    var noisy = noise.simplex3(i.x,i.y,i.z)*0.5;
+                    i.x+=noisy*direction;
+                    i.y+=noisy*direction;
+                    i.z+=noisy*direction;
+                });
+                // sphere_two.geometry.vertices.forEach(function(i){
+                //     i.x+=(2*Math.random()-1)*0.5*direction;
+                //     i.y+=(2*Math.random()-1)*0.5*direction;
+                //     i.z+=(2*Math.random()-1)*0.5*direction;
+                // });
+
+                // sphere_three.geometry.vertices.forEach(function(i){
+                //     i.x+=(2*Math.random()-1)*0.8*direction;
+                //     i.y+=(2*Math.random()-1)*0.8*direction;
+                //     i.z+=(2*Math.random()-1)*0.8*direction;
+                // });
+
+                // console.log(clock.getElapsedTime());
+
+                if (Math.floor(clock.getElapsedTime())%100==0){
+                    direction*=-1;
+                };
+                // console.log(Math.floor(clock.getElapsedTime()));
+                orbit.update();
+                group.rotation.x += 0.002;
+                group.rotation.y += 0.002;
+                group.rotation.z += 0.002;
+               
+                sphere_one.geometry.verticesNeedUpdate = true;
                 renderer.render( scene, camera );
 
             };
