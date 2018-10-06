@@ -1,130 +1,98 @@
+
+<!-- Gary Ang | Ming | playgrd -->
+<!-- playgrd.com -->
+<!-- A dynamic lorenz in three.js-->
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="utf-8">
-        <title>three.js base</title>
+        <title>Lorenz Experiment in three.js</title>
         <style>
         </style>
     </head>
     <body>
-        <script type="text/javascript" src="./three.js"></script>
-        <script type="text/javascript" src="./OrbitControls.js"></script>
-        <script type="text/javascript" src="https://cdn.rawgit.com/josephg/noisejs/master/perlin.js"></script>
-        
+        <script type="text/javascript" src="./libs/three.js"></script>
 
         <script>
 
+
+            // Setting up the scene
             var scene = new THREE.Scene();
-            var camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 10, 1000 );
+
+            // Setting up a camera
+            var camera = new THREE.PerspectiveCamera( 100, window.innerWidth / window.innerHeight, 0.1, 50 );
             camera.position.z = 30;
 
+            // Setting up the renderer. This will be called later to render scene with the camera setup above
             var renderer = new THREE.WebGLRenderer( { antialias: true } );
             renderer.setPixelRatio( window.devicePixelRatio );
             renderer.setSize( window.innerWidth, window.innerHeight );
-            renderer.setClearColor( 0x2B3A42, 1 );
-
+            renderer.setClearColor( 0xF70051, 1 );
             document.body.appendChild( renderer.domElement );
 
-            var orbit = new THREE.OrbitControls( camera, renderer.domElement );
-            orbit.enableZoom = false;
-
-
-            var ambientLight  = new THREE.AmbientLight( '#FFE7FF' ),
-                hemiLight     = new THREE.HemisphereLight('#FFE7FF', '#FFE7FF', 0.5 ),
-                light         = new THREE.PointLight( '#FFE7FF', 1, 100 );
-
-            hemiLight.position.set( 0, 0, 2 );
-            light.position.set( 0, 0, 20 );
-
-            scene.add( hemiLight );
+            // Setting up a light
+            var light = new THREE.PointLight( '#9BC995', 1, 1000 );
+            light.position.set( 0, 0, 0 );
             scene.add( light );
 
+            // Setting up a group to hold the items we will be creating together
             var group = new THREE.Group();
 
-            var geometry = new THREE.SphereGeometry( 15, 200, 50 );
-            var material = new THREE.MeshLambertMaterial( { color: 0xCCB4E0, opacity:0.5, transparent:true, wireframe:true, emissive: 0xFFB4E0,emissiveIntensity:0.1} );
-
-            var sphere_one = new THREE.Mesh( geometry, material );
-            sphere_one.position.x = 0;
-            sphere_one.position.y = 0;
-            sphere_one.position.z = 0;
-            group.add( sphere_one );
-
-            var geometry = new THREE.SphereGeometry( 12, 150, 40 );
-            var material = new THREE.MeshLambertMaterial( { color: 0xFFB4E0, opacity:0.6, transparent:false, wireframe:true,  } );
-            var sphere_two = new THREE.Mesh( geometry, material );
-            sphere_two.position.x = 0;
-            sphere_two.position.y = 0;
-            sphere_two.position.z = 0;
-            group.add( sphere_two );
-
-            var geometry = new THREE.SphereGeometry( 40, 100, 100 );
-            var material = new THREE.MeshLambertMaterial( {  color: 0xEB6896, opacity:0.2, transparent:true, wireframe:true, emissive: 0xEB6896,emissiveIntensity:0.8 } );
-            var sphere_three = new THREE.Mesh( geometry, material );
-            sphere_three.position.x = 0;
-            sphere_three.position.y = 0;
-            sphere_three.position.z = 0;
-            group.add( sphere_three );
+            // Array curve holds the positions of points generated from a lorenz equation; lorenz function below generates the points and returns an array of points
+            var arrayCurve = lorenz();
 
 
+            // Generating the geometry
+            var curve = new THREE.CatmullRomCurve3(arrayCurve);
+            var geometry = new THREE.Geometry();
+            geometry.vertices = curve.getPoints(100000);
+
+            // Generating a cloud of point
+            var pcMat = new THREE.PointsMaterial();
+            pcMat.color = new THREE.Color(0x5555ff);
+            pcMat.transparent = true;
+            pcMat.size = 0.05;
+            pcMat.blending = THREE.AdditiveBlending;
+            pc = new THREE.Points(geometry, pcMat);
+            pc.sizeAttenuation = true;
+            pc.sortPoints = true;
+
+            group.add(pc);
 
             scene.add( group );
 
-            var clock = new THREE.Clock();
-            var direction = 1;
-            
+            var prevFog = true;
 
-            var prevFog = false;
+            var step = 0;
 
             var render = function () {
-                noise.seed(Math.random());
+
+                renderer.render( scene, camera );
                 requestAnimationFrame( render );
 
-                sphere_one.geometry.vertices.forEach(function(i){
-                    var noisy = noise.simplex3(i.x,i.y,i.z)*0.05;
-                    i.x+=noisy*direction;
-                    i.y+=noisy*direction;
-                    i.z+=noisy*direction;
-                });
+                //Varying the points on each frame
+                step+=0.01;
+                var count = 0;
+                var geometry = pc.geometry;
+                var a = 0.9+Math.random()*6;
+                var b = 3.4+Math.random()*7;
+                var f = 9.9+Math.random()*8;
+                var g = 1+Math.random();
+                var t = 0.001;
 
-                sphere_two.geometry.vertices.forEach(function(i){
-                    var noisy = noise.simplex3(i.x,i.y,i.z)*0.05;
-                    i.x+=noisy*direction;
-                    i.y+=noisy*direction;
-                    i.z+=noisy*direction;
-                });
 
-                sphere_three.geometry.vertices.forEach(function(i){
-                    var noisy = noise.simplex3(i.x,i.y,i.z)*0.5;
-                    i.x+=noisy*direction;
-                    i.y+=noisy*direction;
-                    i.z+=noisy*direction;
-                });
-                // sphere_two.geometry.vertices.forEach(function(i){
-                //     i.x+=(2*Math.random()-1)*0.5*direction;
-                //     i.y+=(2*Math.random()-1)*0.5*direction;
-                //     i.z+=(2*Math.random()-1)*0.5*direction;
-                // });
+                geometry.vertices.forEach(function(v){
+                    v.x = v.x - t*a*v.x +t*v.y*v.y -t*v.z*v.z + t*a*f; 
+                    v.y = v.y - t*v.y + t*v.x*v.y - t*b*v.x*v.z + t*g;
+                    v.z = v.z - t*v.z + t*b*v.x*v.y + t*v.x*v.z;
+                })
+                geometry.verticesNeedUpdate = true;
 
-                // sphere_three.geometry.vertices.forEach(function(i){
-                //     i.x+=(2*Math.random()-1)*0.8*direction;
-                //     i.y+=(2*Math.random()-1)*0.8*direction;
-                //     i.z+=(2*Math.random()-1)*0.8*direction;
-                // });
+                group.rotation.x += 0.01;
+                group.rotation.y += 0.02;
+                group.rotation.z += 0.01;
 
-                // console.log(clock.getElapsedTime());
-
-                if (Math.floor(clock.getElapsedTime())%100==0){
-                    direction*=-1;
-                };
-                // console.log(Math.floor(clock.getElapsedTime()));
-                orbit.update();
-                group.rotation.x += 0.002;
-                group.rotation.y += 0.002;
-                group.rotation.z += 0.002;
-               
-                sphere_one.geometry.verticesNeedUpdate = true;
-                renderer.render( scene, camera );
 
             };
 
@@ -135,8 +103,31 @@
 
             }, false );
 
-
             render();
+
+            function lorenz(){
+
+                var arrayCurve=[];
+
+                var x = 0.01, y = 0.01, z = 0.01;
+                var a = 0.9;
+                var b = 3.4;
+                var f = 9.9;
+                var g = 1;
+                var t = 0.001;
+                for (var i=0;i<100000;i++){
+
+                var x1 = x;
+                var y1 = y;
+                var z1 = z;
+                x = x - t*a*x +t*y*y -t*z*z + t*a*f; 
+                y = y - t*y + t*x*y - t*b*x*z + t*g;
+                z = z - t*z + t*b*x*y + t*x*z;
+                arrayCurve.push(new THREE.Vector3(x, y, z).multiplyScalar(1));   
+                }
+                return arrayCurve;
+            }
+
 
         </script>
     </body>

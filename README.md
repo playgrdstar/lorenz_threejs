@@ -1,3 +1,5 @@
-# Primer on vertices in three.js 
+# Art and Math
 
-A simple primer on manipulating vertices in three.js
+An experiment with the lorenz equation in three.js
+
+www.playgrd.com
